@@ -1,0 +1,126 @@
+import pygame,sys,random
+from  pygame import *
+class Bird(object):
+    ''' 定义一个鸟类 '''
+    def __init__(self):
+        '''定义鸟类的初始化方法'''
+        self.birdRect = pygame.Rect((65, 50, 25, 25))   #定义鸟的矩形
+        self.bird = pygame.image.load('images/bird.png')
+        self.bird1 = self.bird.get_rect()
+        self.status = 0   #默认飞行状态
+        self.birdX = 120  #鸟所在的x轴坐标
+        self.birdY = 350  #定义鸟的Y坐标  上下飞行的高度
+        self.jump = False #不跳跃的默认情况下的小鸟会自动下落
+        self.jumpSpeed = 10#小鸟跳一次跳跃的高度
+        self.gravity = 5  #重力
+        self.dead = False #小鸟默认为活着
+
+    def birdUpdate(self):
+        if self.jump:
+            #小鸟跳跃
+            self.jumpSpeed -= 1#速度递减  上升速度越来越慢
+            self.birdY -= self.jumpSpeed
+        else:
+            #小鸟坠落
+            self.gravity += 0.2#重力递增  下降速度越来越快
+            self.birdY += self.gravity #鸟的y轴坐标增加，小鸟下落
+        self.birdRect[1] = self.birdY #更改Y轴的位置
+
+class Pipeline(object):
+    '''定义管道类'''
+    def __init__(self):
+        '''定义管道类初始化方法'''
+        self.wallx = 400  #管道所在的x轴坐标
+        self.pineup = pygame.image.load('images/up_pipe.png')  #加载上管道
+        self.pineup = pygame.transform.scale(self.pineup, (80, 480) )#定义管道图片大小
+        self.pineup1 = self.pineup.get_rect()
+        self.pinedown = pygame.image.load('images/down_pipe.png')#加载下管道
+        self.pinedown = pygame.transform.scale(self.pinedown, (80, 480))  #定义管道图片的大小
+        self.pinedown1 = self.pinedown.get_rect()
+    def updatePipeline(self):
+        '''水平移动'''
+        self.wallx -= 5
+        if self.wallx < -80:
+            self.wallx = 400
+        if self.wallx == 70:
+            global score
+            score += 1
+
+def createMap():
+    '''定义地图方法'''
+    screen.fill((255, 255, 255))#颜色
+    screen.blit(background,(0, 0))#填入背景
+
+    #显示管道
+    screen.blit(Pipeline.pineup,(Pipeline.wallx,-100))#上管道坐标位置
+    screen.blit(Pipeline.pinedown, (Pipeline.wallx, 500))#下管道坐标位置
+    Pipeline.updatePipeline()#管道位置
+    screen.blit(Bird.bird,(Bird.birdX,Bird.birdY))#设置小鸟的坐标
+    Bird.birdUpdate()     #鸟移动
+
+    #显示分数
+    screen.blit(font.render('Score:' + str(score),-1, (255, 255, 255)),(140,50))#设定颜色及位置坐标
+    pygame.display.update()#刷新屏幕
+
+def cheakdead():
+    pineup = screen.blit(Pipeline.pineup, (Pipeline.wallx, -100))  # 上管道坐标位置
+    pinedown = screen.blit(Pipeline.pinedown, (Pipeline.wallx, 500))  # 下管道坐标位置
+    bird = screen.blit(Bird.bird, (Bird.birdX, Bird.birdY))  # 设置小鸟的坐标
+    # bird[2]=38
+    # bird[3]=23
+
+    # print(Bird.bird[0])
+    # print(bird)
+    # print(pineup)
+    # 检测小鸟与上下方管子碰撞
+    if pineup.colliderect(bird) or pinedown. colliderect(bird) or not bird[1] < height:
+        Bird.dead = True
+        # if  not  bird[1] <height:
+        #     Bird.dead = True
+        return True
+    else:
+        return False
+def getRest1():
+    final_text1 = "GAME OVER"
+    final_text2 = "Your final score is:" + str(score)
+    ft1_font = pygame.font.SysFont(None,70)#设置第一行文字字体
+    ft1_surf = font.render(final_text1,1,(242,3,36))#设置第一行文字颜色
+    ft2_font = pygame.font.SysFont(None, 50)#设置第二行文字字体
+    ft2_surf = font.render(final_text2, 1, (253, 177, 6))#设置第二行文字颜色
+    screen.blit(background, (0, 0))  # 再次填入背景  刷新界面
+    #设置第一行文字显示位置
+    screen.blit(ft1_surf,[screen.get_width()/2-ft1_surf.get_width()/2, 100])
+    #设置第二行文字显示位置
+    screen.blit(ft2_surf, [screen.get_width()/2-ft2_surf.get_width()/2,200])
+    pygame.display.update()
+if __name__ == '__main__':
+    pygame.init()#初始化
+    pygame.font.init()
+    font = pygame.font.SysFont(None, 50)
+    size = width,height = 400,650#设置窗口大小
+    screen = pygame.display.set_mode(size)#显示窗口
+    clock = pygame.time.Clock()#设置时钟
+    Pipeline = Pipeline()#实例化管道类
+    Bird = Bird()#实例化鸟类
+    score = 0
+
+    while True:
+        clock.tick(50)#每秒执行60次   画面为60帧
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                sys.exit()#控制退出
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_ESCAPE]:
+            sys.exit()#控制退出
+        if (event.type == pygame.KEYDOWN or event.type == pygame.MOUSEBUTTONDOWN) and  not Bird.dead:
+            Bird.jump = True   #跳跃
+            Bird.gravity = 4    #重力
+            Bird.jumpSpeed = 8 #跳跃速度
+
+        background = pygame.image.load('images/bg_day.png')
+        background=pygame.transform.scale(background, (400, 650) )#加载背景图片  改变背景图片大小
+        if cheakdead():
+            getRest1()
+        else:
+            createMap()#绘制地图
